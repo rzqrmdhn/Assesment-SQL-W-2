@@ -1,0 +1,210 @@
+Melakukan Transaction SQL
+
+a. Insert untuk 5 record & commited.
+INSERT INTO customers (customerNumber, customerName, contactLastName, contactFirstName, phone, addressLine1, city, state, postalCode, country, salesRepEmployeeNumber, creditLimit)
+VALUES (501, 'Classic Motors', 'Fleming', 'Johan', '0-888-888-8888', '3101 N Central Ave', 'Phoenix', 'AZ', '85012', 'BDG', 1370, 60000),
+(497, 'Luxury Cars', 'Blake', 'Roni', '0-999-999-9999', '48 Lodge Road', 'London', NULL, 'SE13 6RJ', 'GRT', 1501, 80000),
+(498, 'Speed Cars', 'Nelson', 'Nicki', '0-800-555-1212', 'P.O. Box 666', 'Palo Alto', 'CA', '94303', 'JKT', 1504, 75000),
+(499, 'City Cars', 'Zhou', 'Lingga', '0-888-555-9999', '33 Yonge St.', 'Toronto', 'ON', 'M5E 1G4', 'SBY', 1323, 90000),
+(500, 'Smart Cars', 'Li', 'Julia', '1-888-999-1111', '695 Prince Edward St.', 'Vancouver', 'BC', 'V6B 4P8', 'SBY', 1323, 100000);
+
+Screenshot 2023-05-12 161326
+
+b. Insert/update/delete di 1 sesi dan read table di sesi yg berbeda.
+INSERT INTO products (productCode, productName, productLine, productScale, productVendor, productDescription, quantityInStock, buyPrice, MSRP)
+VALUES ('S10_6902', '1962 City of Detroit Fire Dept. Water Pump', 'Trucks and Buses', '1:18', 'Exoto Designs', 'Features completely detailed interior including hoses and pump, folding ladders, water hoses that connect to the hydrants located on the corners of the pump', 907, 48.26, 112.7);
+
+UPDATE customers SET phone = '1-800-555-5555' WHERE customerNumber = 500;
+SELECT * FROM customers WHERE customerNumber = 500;
+
+-- Delete data
+DELETE FROM customers WHERE customerNumber = 501;
+
+Screenshot 2023-05-12 161631
+
+c. Rollback ke savepoint.
+SAVEPOINT mysavepoint;
+UPDATE customers SET phone = '1-1010-22-5555' WHERE customerNumber = 500;
+ROLLBACK TO mysavepoint;
+
+Screenshot 2023-05-10 181353
+
+Screenshot 2023-05-10 181620
+
+Membuat table struktur dari form gocar
+USE gocar;
+
+CREATE TABLE pesanan (
+id_pesanan VARCHAR(50) NOT NULL PRIMARY KEY,
+tanggal DATE NOT NULL,
+nama_pelanggan VARCHAR(100) NOT NULL,
+total_bayar DECIMAL(10,2) NOT NULL
+);
+
+CREATE TABLE pembayaran (
+id_pembayaran INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+id_pesanan VARCHAR(50) NOT NULL,
+biaya_perjalanan DECIMAL(10,2) NOT NULL,
+biaya_jasa_aplikasi DECIMAL(10,2) NOT NULL,
+total_pembayaran DECIMAL(10,2) NOT NULL,
+jenis_pembayaran VARCHAR(50) NOT NULL,
+FOREIGN KEY (id_pesanan) REFERENCES pesanan(id_pesanan)
+);
+
+CREATE TABLE detail_perjalanan (
+id_detail INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+id_pesanan VARCHAR(50) NOT NULL,
+id_draiver VARCHAR(50) NOT NULL,
+waktu_jemput TIME NOT NULL,
+jarak VARCHAR(50) NOT NULL,
+waktu_perjalanan VARCHAR(50) NOT NULL,
+alamat_jemput VARCHAR(225) NOT NULL,
+alamat_tujuan VARCHAR(225) NOT NULL,
+FOREIGN KEY (id_pesanan) REFERENCES pesanan(id_pesanan),
+FOREIGN KEY (id_draiver) REFERENCES draiver(id_draiver)
+);
+
+CREATE TABLE draiver (
+id_draiver VARCHAR(50) NOT NULL PRIMARY KEY,
+nama_draiver VARCHAR(50) NOT NULL,
+kendaraan VARCHAR(100) NOT NULL
+);
+
+INSERT INTO pesanan (id_pesanan, tanggal, nama_pelanggan, total_bayar)
+VALUES ('RB-191274-3068613', '2022-12-21', 'Balqis Rizki Permata', 30000);
+
+INSERT INTO pembayaran (id_pesanan, biaya_perjalanan, biaya_jasa_aplikasi, total_pembayaran, jenis_pembayaran)
+VALUES ('RB-191274-3068613', 26000, 4000, 30000, 'tunai');
+
+INSERT INTO draiver (id_draiver, nama_draiver, kendaraan)
+VALUES ('Z1830TD', 'Heryawan ', 'Daihatsu Sigra');
+
+INSERT INTO detail_perjalanan (id_pesanan, id_draiver, waktu_jemput, jarak, waktu_perjalanan, alamat_jemput, alamat_tujuan)
+VALUES ('RB-191274-3068613','Z1830TD', '17:09', '3.0 km', '16 menit', 'STIKES MUHAMMADIYAH CIAMIS', 'JL. K. H. Ahmad Dahlan No. 20, Ciamis, Kec. Ciamis Kabupaten Ciamis, Jawa Barat 46216, Indonesia - Toko Ujang Haji Jana Jl. Otista No. 46, Pawindan, Kec. Ciamis, Kabupaten Clamis, Jawa Barat 46218, Indonesia');
+
+SELECT * FROM draiver d ;
+
+SELECT
+p.id_pesanan,
+p.tanggal,
+p.nama_pelanggan,
+pb.biaya_perjalanan,
+pb.biaya_jasa_aplikasi,
+pb.total_pembayaran,
+pb.jenis_pembayaran,
+d.id_draiver,
+d.nama_draiver,
+d.kendaraan,
+dp.waktu_jemput,
+dp.jarak,
+dp.waktu_perjalanan,
+dp.alamat_jemput AS alamat_jemput_detail,
+dp.alamat_tujuan AS alamat_tujuan_detail
+FROM
+pesanan p
+JOIN
+pembayaran pb on
+p.id_pesanan = pb.id_pesanan
+JOIN
+detail_perjalanan dp on
+p.id_pesanan = dp.id_pesanan
+JOIN
+draiver d on
+dp.id_draiver = d.id_draiver;
+
+image
+image
+
+Eksekusi script sql subquery pada modul training:
+
+a. SELECT statement
+SELECT productName, buyPrice
+FROM products
+WHERE buyPrice > (
+SELECT AVG(buyPrice)
+FROM products
+);
+
+image
+
+b.INSERT statement dengan subquery
+INSERT INTO payments (customerNumber, checkNumber, paymentDate, amount)
+SELECT o.customerNumber, 'CH567890', '2023-05-11', SUM(priceEach * quantityOrdered)
+FROM orders o
+JOIN orderdetails od ON o.orderNumber = od.orderNumber
+WHERE o.customerNumber = 112
+GROUP BY o.customerNumber;
+
+image
+
+c. UPDATE statement dengan subquery
+UPDATE products
+SET buyPrice = buyPrice * 1.1
+WHERE productLine = (
+SELECT productLine
+FROM (SELECT * FROM products) p
+WHERE productName = '1969 Harley Davidson Ultimate Chopper'
+);
+
+image
+
+d. DELETE statement dengan subquery
+DELETE FROM payments
+WHERE customerNumber IN (
+SELECT customerNumber
+FROM customers
+WHERE country = 'USA'
+);
+
+select * from payments p
+where customerNumber in (
+select customerNumber
+from customers c
+where country = 'USA')
+
+image
+image
+
+e. Filter dari column dengan agregasi nilai paling besar menggunakan subquery
+SELECT productLine, MAX(buyPrice) AS maxBuyPrice
+FROM products
+GROUP BY productLine
+HAVING maxBuyPrice > (
+SELECT AVG(buyPrice)
+FROM products
+);
+
+image
+
+f. Query dari subquery sebagai source data
+SELECT t1.productName, t1.buyPrice, t1.productLine, t2.maxBuyPrice
+FROM products t1
+JOIN (
+SELECT productLine, MAX(buyPrice) AS maxBuyPrice
+FROM products
+GROUP BY productLine
+) t2 ON t1.productLine = t2.productLine AND t1.buyPrice = t2.maxBuyPrice;
+
+image
+
+g. Combine query UNION
+SELECT customerNumber, checkNumber, paymentDate, amount
+FROM payments
+WHERE amount > 5000
+UNION
+SELECT customerNumber, checkNumber, paymentDate, amount
+FROM payments
+WHERE paymentDate >= '2023-01-01';
+
+image
+
+h. Combine query INTERSECT
+SELECT customerNumber, checkNumber, paymentDate, amount
+FROM payments
+WHERE amount > 5000
+INTERSECT
+SELECT customerNumber, checkNumber, paymentDate, amount
+FROM payments
+WHERE paymentDate >= '2004-01-01';
+
+image
